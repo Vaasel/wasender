@@ -17,10 +17,7 @@ return new class extends Migration
                 $table->dropForeign(['device_id']);
             }
 
-            // Modify the column to be nullable
-            $table->unsignedBigInteger('device_id')->nullable()->change();
-
-            // Add the new foreign key constraint
+            // Add the new foreign key constraint with SET NULL on delete
             $table->foreign('device_id')
                 ->references('id')
                 ->on('devices')
@@ -28,28 +25,17 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     *
-     * @return void
-     */
     public function down()
     {
         Schema::table('replies', function (Blueprint $table) {
-            // Drop the existing foreign key constraint if it exists
-            if (Schema::hasTable('replies') && Schema::hasColumn('replies', 'device_id')) {
-                $table->dropForeign(['device_id']);
-            }
+            // Drop the foreign key constraint if it exists
+            $table->dropForeign(['device_id']);
 
-            // Modify the column to be non-nullable
-            $table->unsignedBigInteger('device_id')->nullable(false)->change();
-
-            // Add back the old foreign key constraint with CASCADE on delete
+            // Add back the old foreign key constraint
             $table->foreign('device_id')
                 ->references('id')
-                ->on('devices')
-                ->onDelete('cascade');
+                ->on('devices');
         });
     }
-   
 };
+
