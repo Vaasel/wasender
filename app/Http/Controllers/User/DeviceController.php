@@ -73,37 +73,6 @@ class DeviceController extends Controller
     //  * @param  \Illuminate\Http\Request  $request
     //  * @return \Illuminate\Http\Response
     //  */
-    public function store(Request $request)
-    {
-       
-        if (getUserPlanData('device_limit') == false) {
-            return response()->json([
-                'message'=>__('Maximum Device Limit Exceeded')
-            ],401);  
-        }
-
-        $validated = $request->validate([
-            'name' => 'required|max:100',
-            'webhook_url' => 'nullable|url|max:100',
-        ]);
-
-        $device=new Device;
-        $device->user_id=Auth::id();
-        $device->name=$request->name;
-        $device->hook_url=$request->webhook_url;
-        $device->save();
-
-        return response()->json([
-            'redirect'=>url('user/device/'.$device->uuid.'/qr'),
-            'message'=>__('Device Created Successfully')
-        ],200);
-    }
-/**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
     // public function store(Request $request)
     // {
        
@@ -118,29 +87,60 @@ class DeviceController extends Controller
     //         'webhook_url' => 'nullable|url|max:100',
     //     ]);
 
-    //     $devices = Device::where('user_id', Auth::id())->get();
     //     $device=new Device;
     //     $device->user_id=Auth::id();
     //     $device->name=$request->name;
     //     $device->hook_url=$request->webhook_url;
     //     $device->save();
-    //     if ($devices->count() < 1) {
-    //                 // Retrieve the replies with device ID 0 for the user
-    //                 $replies = Reply::where('user_id', Auth::id())
-    //                     ->where('device_id', null)
-    //                     ->get();
-    //                  if ($replies->count() > 0){
-    //                 // Assign the new device ID to the replies
-    //                 $replies->each(function ($reply) use ($device) {
-    //                     $reply->device_id = $device->id;
-    //                     $reply->save();
-    //                 });}
-    //             }
+
     //     return response()->json([
     //         'redirect'=>url('user/device/'.$device->uuid.'/qr'),
     //         'message'=>__('Device Created Successfully')
     //     ],200);
     // }
+/**
+     * Store a newly created resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function store(Request $request)
+    {
+       
+        if (getUserPlanData('device_limit') == false) {
+            return response()->json([
+                'message'=>__('Maximum Device Limit Exceeded')
+            ],401);  
+        }
+
+        $validated = $request->validate([
+            'name' => 'required|max:100',
+            'webhook_url' => 'nullable|url|max:100',
+        ]);
+
+        $devices = Device::where('user_id', Auth::id())->get();
+        $device=new Device;
+        $device->user_id=Auth::id();
+        $device->name=$request->name;
+        $device->hook_url=$request->webhook_url;
+        $device->save();
+        if ($devices->count() < 1) {
+                    // Retrieve the replies with device ID 0 for the user
+                    $replies = Reply::where('user_id', Auth::id())
+                        ->where('device_id', null)
+                        ->get();
+                     if ($replies->count() > 0){
+                    // Assign the new device ID to the replies
+                    $replies->each(function ($reply) use ($device) {
+                        $reply->device_id = $device->id;
+                        $reply->save();
+                    });}
+                }
+        return response()->json([
+            'redirect'=>url('user/device/'.$device->uuid.'/qr'),
+            'message'=>__('Device Created Successfully')
+        ],200);
+    }
     public function scanQr($id)
     {
         $device=Device::where('user_id',Auth::id())->where('uuid',$id)->first();
